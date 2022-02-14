@@ -1,0 +1,11 @@
+version: "3.8"
+
+volumes:
+  pg-data:
+
+services:
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
