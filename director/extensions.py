@@ -1,4 +1,3 @@
-import imp
 import json
 from os import sep
 from pathlib import Path
@@ -26,12 +25,20 @@ class CeleryWorkflow:
 
     def init_app(self, app):
         self.app = app
-        self.path = Path(self.app.config["DIRECTOR_HOME"]).resolve() / "workflows.yml"
-        with open(self.path) as f:
-            self.workflows = yaml.load(f, Loader=yaml.SafeLoader)
-
+        self.load_workflows()
         self.import_user_tasks()
         self.read_schemas()
+
+    def load_workflows(self):
+        folder = Path(self.app.config["DIRECTOR_HOME"]).resolve()
+        file_format = self.app.config["WORKFLOW_FORMAT"]
+        with open(folder/ f"workflows.{file_format}") as f:
+            if file_format == 'yml':
+                self.workflows = yaml.load(f, Loader=yaml.SafeLoader)
+            elif file_format == 'json':
+                self.workflows = json.load(f)
+            else:
+                raise ValueError(f"Invalid workflow format: '{file_format}'")
 
     def get_by_name(self, name):
         workflow = self.workflows.get(name)

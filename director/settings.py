@@ -69,7 +69,7 @@ class Config(object):
 
         # Sentry configuration
         self.SENTRY_DSN = env.str("DIRECTOR_SENTRY_DSN", "")
-
+        self.WORKFLOW_FORMAT = env.str("DIRECTOR_WORKFLOW_FORMAT", "json")
         # Default retention value (number of workflows to keep in the database)
         self.DEFAULT_RETENTION_OFFSET = env.int("DIRECTOR_DEFAULT_RETENTION_OFFSET", -1)
 
