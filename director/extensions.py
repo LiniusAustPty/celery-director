@@ -31,14 +31,21 @@ class CeleryWorkflow:
 
     def load_workflows(self):
         folder = Path(self.app.config["DIRECTOR_HOME"]).resolve()
-        file_format = self.app.config["WORKFLOW_FORMAT"]
-        with open(folder/ f"workflows.{file_format}") as f:
-            if file_format == 'yml':
-                self.workflows = yaml.load(f, Loader=yaml.SafeLoader)
-            elif file_format == 'json':
-                self.workflows = json.load(f)
-            else:
-                raise ValueError(f"Invalid workflow format: '{file_format}'")
+        file_fmt = self.app.config["WORKFLOW_FILE_FORMAT"]
+        if file_fmt == 'yaml':
+            self.load_yaml_workflows(folder)
+        elif file_fmt == 'json':
+            self.load_json_workflows(folder)
+        else:
+            raise ValueError(f"Invalid workflow format: '{file_fmt}'")
+
+    def load_json_workflows(self, folder):
+        with open(folder / "workflows.json") as f:
+            self.workflows = json.load(f)
+
+    def load_yaml_workflows(self, folder):
+        with open(folder / "workflows.yml") as f:
+            self.workflows = yaml.load(f, Loader=yaml.SafeLoader)
 
     def get_by_name(self, name):
         workflow = self.workflows.get(name)
