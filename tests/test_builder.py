@@ -1,25 +1,26 @@
 import os
 from uuid import UUID
-
 import pytest
 
 from director.exceptions import WorkflowNotFound
 from director.tasks.workflows import start, end
 from director.models.tasks import Task
 from director.models.workflows import Workflow
+from director.settings import Config
 
 from tests.conftest import _remove_keys
 
+
 @pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
-def test_create_unknown_workflow(create_builder, workflow_fmt):
-    os.environ['DIRECTOR_WORKFLOW_FILE_FORMAT'] = workflow_fmt
+def test_create_unknown_workflow(app, create_builder, workflow_fmt):
+    app.config["WORKFLOW_FORMAT"] = workflow_fmt
     with pytest.raises(WorkflowNotFound):
         create_builder("project", "UNKNOW_WORKFLOW", {})
 
 
 @pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
-def test_build_one_task(create_builder, workflow_fmt):
-    os.environ['DIRECTOR_WORKFLOW_FILE_FORMAT'] = workflow_fmt
+def test_build_one_task(app, create_builder, workflow_fmt):
+    app.config["WORKFLOW_FORMAT"] = workflow_fmt
     data, builder = create_builder("example", "WORKFLOW", {"foo": "bar"})
     assert data == {
         "name": "WORKFLOW",
@@ -38,7 +39,7 @@ def test_build_one_task(create_builder, workflow_fmt):
 
 @pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
 def test_build_chained_tasks(app, create_builder, workflow_fmt):
-    os.environ['DIRECTOR_WORKFLOW_FILE_FORMAT'] = workflow_fmt
+    app.config["WORKFLOW_FORMAT"] = workflow_fmt
     keys = ["id", "created", "updated", "task"]
     data, builder = create_builder("example", "SIMPLE_CHAIN", {"foo": "bar"})
     assert data == {
@@ -84,7 +85,7 @@ def test_build_chained_tasks(app, create_builder, workflow_fmt):
 
 @pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
 def test_build_grouped_tasks(app, create_builder, workflow_fmt):
-    os.environ['DIRECTOR_WORKFLOW_FILE_FORMAT'] = workflow_fmt
+    app.config["WORKFLOW_FORMAT"] = workflow_fmt
     keys = ["id", "created", "updated", "task"]
     data, builder = create_builder("example", "SIMPLE_GROUP", {"foo": "bar"})
     assert data == {
@@ -128,6 +129,69 @@ def test_build_grouped_tasks(app, create_builder, workflow_fmt):
     assert _remove_keys(tasks[2].to_dict(), keys) == {
         "key": "TASK_C",
         "previous": [str(tasks[0].to_dict()["id"])],
+        "result": None,
+        "status": "pending",
+    }
+
+
+@pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
+def test_build_nested_chain_tasks(app, create_builder, workflow_fmt):
+    app.config["WORKFLOW_FORMAT"] = workflow_fmt
+    keys = ["id", "created", "updated", "task"]
+    data, builder = create_builder("example", "NESTED_CHAIN", {"foo": "bar"})
+    assert data == {
+        "name": "NESTED_CHAIN",
+        "payload": {"foo": "bar"},
+        "project": "example",
+        "fullname": "example.NESTED_CHAIN",
+        "status": "pending",
+        "periodic": False,
+    }
+
+    # Check the Celery canvas
+    assert len(builder.canvas) == 5
+    assert builder.canvas[0].task == "director.tasks.workflows.start"
+    assert builder.canvas[-1].task == "director.tasks.workflows.end"
+    assert builder.canvas[1].task == "TASK_EXAMPLE"
+    assert builder.canvas[2].task == "celery.chain"
+    assert builder.canvas[3].task == "TASK_EXAMPLE"
+
+    nested_chain_tasks = builder.canvas[2].tasks
+    nested_chain_task_names = [t.task for t in nested_chain_tasks]
+    assert nested_chain_task_names == ["TASK_A", "TASK_B", "TASK_C"]
+
+    # Check the tasks in database (including previouses ID)
+    with app.app_context():
+        tasks = Task.query.order_by(Task.created_at.asc()).all()
+
+    assert len(tasks) == 5
+    assert _remove_keys(tasks[0].to_dict(), keys) == {
+        "key": "TASK_EXAMPLE",
+        "previous": [],
+        "result": None,
+        "status": "pending",
+    }
+    assert _remove_keys(tasks[1].to_dict(), keys) == {
+        "key": "TASK_A",
+        "previous": [str(tasks[0].to_dict()["id"])],
+        "result": None,
+        "status": "pending",
+    }
+    assert _remove_keys(tasks[2].to_dict(), keys) == {
+        "key": "TASK_B",
+        "previous": [str(tasks[1].to_dict()["id"])],
+        "result": None,
+        "status": "pending",
+    }
+    assert _remove_keys(tasks[3].to_dict(), keys) == {
+        "key": "TASK_C",
+        "previous": [str(tasks[2].to_dict()["id"])],
+        "result": None,
+        "status": "pending",
+    }
+    assert _remove_keys(tasks[4].to_dict(), keys) == {
+        "key": "TASK_EXAMPLE",
+        "previous": [str(t.id) for t in tasks[1:4]],
         "result": None,
         "status": "pending",
     }

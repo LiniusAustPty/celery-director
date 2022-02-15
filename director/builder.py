@@ -1,5 +1,7 @@
-from celery import chain, group
-from celery.utils import uuid
+from uuid import uuid4
+from functools import cached_property
+
+import celery
 
 from director.exceptions import WorkflowSyntaxError
 from director.extensions import cel, cel_workflows
@@ -12,28 +14,33 @@ from director.tasks.workflows import start, end
 class WorkflowBuilder(object):
     def __init__(self, workflow_id):
         self.workflow_id = workflow_id
-        self._workflow = None
-
-        self.queue = cel_workflows.get_queue(str(self.workflow))
-        self.tasks = cel_workflows.get_tasks(str(self.workflow))
         self.canvas = []
-
         # Pointer to the previous task(s)
         self.previous = []
 
     @property
-    def workflow(self):
-        if not self._workflow:
-            self._workflow = Workflow.query.filter_by(id=self.workflow_id).first()
-        return self._workflow
+    def tasks(self):
+        return self.template.get('tasks')
 
-    def new_task(self, task_name, single=True):
-        task_id = uuid()
+    @property
+    def default_queue(self):
+        return self.template.get('queue', 'celery')
+
+    @cached_property
+    def workflow(self):
+        return Workflow.query.filter_by(id=self.workflow_id).first()
+
+    @cached_property
+    def template(self):
+        return cel_workflows.get_by_name(self.workflow)
+
+    def new_task(self, task_name, queue=None, single=True):
+        task_id = str(uuid4())
 
         # We create the Celery task specifying its UID
         signature = cel.tasks.get(task_name).subtask(
             kwargs={"workflow_id": self.workflow_id, "payload": self.workflow.payload},
-            queue=self.queue,
+            queue=queue or self.default_queue,
             task_id=task_id,
         )
 
@@ -54,42 +61,49 @@ class WorkflowBuilder(object):
 
     def parse(self, tasks):
         canvas = []
-
         for task in tasks:
             if type(task) is str:
                 signature = self.new_task(task)
                 canvas.append(signature)
-            elif type(task) is dict:
-                name = list(task)[0]
-                if "type" not in task[name] and task[name]["type"] != "group":
-                    raise WorkflowSyntaxError()
-
-                sub_canvas_tasks = [
-                    self.new_task(t, single=False) for t in task[name]["tasks"]
-                ]
-
-                sub_canvas = group(*sub_canvas_tasks, task_id=uuid())
+                continue
+            if type(task) is dict:
+                data = list(task.values())[0]
+                sub_canvas = self.parse_sub_canvas(**data)
+                self.previous = [s.id for s in sub_canvas.tasks]
                 canvas.append(sub_canvas)
-                self.previous = [s.id for s in sub_canvas_tasks]
-            else:
-                raise WorkflowSyntaxError()
+                continue
 
+            raise WorkflowSyntaxError()
         return canvas
 
-    def build(self):
-        self.canvas = self.parse(self.tasks)
-        self.canvas.insert(0, start.si(self.workflow.id).set(queue=self.queue))
-        self.canvas.append(end.si(self.workflow.id).set(queue=self.queue))
+    def parse_sub_canvas(self, tasks, **kwargs):
+        celery_type, is_single = self._parse_celery_type(kwargs.get("type"))
+        params = {'single': is_single, 'queue': kwargs.get('queue')}
+        sub_tasks = [self.new_task(t, **params) for t in tasks]
+        return celery_type(*sub_tasks, task_id=str(uuid4()))
 
-    def run(self):
+    def build(self):
+        start_task = start.si(self.workflow.id).set(queue=self.default_queue)
+        end_task = end.si(self.workflow.id).set(queue=self.default_queue)
+        self.canvas = self.parse(self.tasks)
+        self.canvas.insert(0, start_task)
+        self.canvas.append(end_task)
+
+    def run(self, **kwargs):
         if not self.canvas:
             self.build()
 
-        canvas = chain(*self.canvas, task_id=uuid())
+        canvas = celery.chain(*self.canvas, task_id=str(uuid4()))
 
         try:
-            return canvas.apply_async()
+            return canvas.apply_async(**kwargs)
         except Exception as e:
             self.workflow.status = StatusType.error
             self.workflow.save()
             raise e
+
+    def _parse_celery_type(self, name):
+        if name not in ['group', 'chain']:
+            raise WorkflowSyntaxError
+        is_single = name == 'chain'
+        return getattr(celery, name), is_single

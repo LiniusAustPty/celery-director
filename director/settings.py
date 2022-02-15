@@ -73,7 +73,7 @@ class Config(object):
         self.DEFAULT_RETENTION_OFFSET = env.int("DIRECTOR_DEFAULT_RETENTION_OFFSET", -1)
 
         # static workflow file format
-        self.WORKFLOW_FILE_FORMAT = env.str("DIRECTOR_WORKFLOW_FILE_FORMAT", "json")
+        self.WORKFLOW_FORMAT = env.str("DIRECTOR_WORKFLOW_FORMAT", "json").lower()
 
 
 class UserConfig(dict):
@@ -92,3 +92,18 @@ class UserConfig(dict):
             return self[attr]
         except KeyError as e:
             raise AttributeError(f"Config '{e.args[0]}' not defined")
+
+    # "example.NESTED_CHAIN": {
+    #     "tasks": [
+    #         "TASK_A",
+    #         {
+    #             "EXAMPLE_CHAIN": {
+    #                 "type": "chain",
+    #                 "tasks": [
+    #                     "TASK_B",
+    #                     "TASK_C"
+    #                 ]
+    #             }
+    #         }
+    #     ]
+    # }

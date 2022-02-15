@@ -31,7 +31,7 @@ class CeleryWorkflow:
 
     def load_workflows(self):
         folder = Path(self.app.config["DIRECTOR_HOME"]).resolve()
-        file_fmt = self.app.config["WORKFLOW_FILE_FORMAT"]
+        file_fmt = self.app.config["WORKFLOW_FORMAT"]
         if file_fmt == 'yaml':
             self.load_yaml_workflows(folder)
         elif file_fmt == 'json':
@@ -48,7 +48,7 @@ class CeleryWorkflow:
             self.workflows = yaml.load(f, Loader=yaml.SafeLoader)
 
     def get_by_name(self, name):
-        workflow = self.workflows.get(name)
+        workflow = self.workflows.get(str(name))
         if not workflow:
             raise WorkflowNotFound(f"Workflow {name} not found")
         return workflow
