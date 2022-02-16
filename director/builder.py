@@ -69,7 +69,6 @@ class WorkflowBuilder(object):
             if type(task) is dict:
                 data = list(task.values())[0]
                 sub_canvas = self.parse_sub_canvas(**data)
-                self.previous = [s.id for s in sub_canvas.tasks]
                 canvas.append(sub_canvas)
                 continue
 
@@ -80,6 +79,8 @@ class WorkflowBuilder(object):
         celery_type, is_single = self._parse_celery_type(kwargs.get("type"))
         params = {'single': is_single, 'queue': kwargs.get('queue')}
         sub_tasks = [self.new_task(t, **params) for t in tasks]
+        if not is_single:
+            self.previous = [s.id for s in sub_tasks]
         return celery_type(*sub_tasks, task_id=str(uuid4()))
 
     def build(self):
