@@ -13,11 +13,15 @@ logger = get_task_logger(__name__)
 
 @task_prerun.connect
 def director_prerun(task_id, task, *args, **kwargs):
-    if task.name.startswith("director.tasks"):
+    ignored_tasks = ("director.tasks", "celery.")
+    if task.name.startswith(ignored_tasks):
         return
 
     with cel.app.app_context():
+        logger.info("task_id: %s", task_id)
         task = Task.query.filter_by(id=task_id).first()
+        if not task:
+            raise ValueError()
         task.status = StatusType.progress
         task.save()
 
