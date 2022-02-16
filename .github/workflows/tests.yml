@@ -72,6 +72,6 @@ jobs:
         - name: Execute tests
           run: |
             export DIRECTOR_HOME=$GITHUB_WORKSPACE/tests/workflows/
-            director celery worker -D --concurrency=2 --queues=celery,nested > /dev/null 2>&1 &
+            director celery worker -P solo --queues=celery,nested > /dev/null 2>&1 &
             sleep 5
             pytest tests/ -v
