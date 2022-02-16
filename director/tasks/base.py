@@ -3,10 +3,10 @@ from celery.signals import after_task_publish, task_prerun, task_postrun
 from celery.utils.log import get_task_logger
 
 from director.extensions import cel, db
+from director.exceptions import TaskNotFound
 from director.models import StatusType
 from director.models.workflows import Workflow
 from director.models.tasks import Task
-
 
 logger = get_task_logger(__name__)
 
@@ -21,7 +21,7 @@ def director_prerun(task_id, task, *args, **kwargs):
         logger.info("task_id: %s", task_id)
         task = Task.query.filter_by(id=task_id).first()
         if not task:
-            raise ValueError()
+            raise TaskNotFound(f"Task {task_id} not found")
         task.status = StatusType.progress
         task.save()
 
