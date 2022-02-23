@@ -92,18 +92,3 @@ class UserConfig(dict):
             return self[attr]
         except KeyError as e:
             raise AttributeError(f"Config '{e.args[0]}' not defined")
-
-    # "example.NESTED_CHAIN": {
-    #     "tasks": [
-    #         "TASK_A",
-    #         {
-    #             "EXAMPLE_CHAIN": {
-    #                 "type": "chain",
-    #                 "tasks": [
-    #                     "TASK_B",
-    #                     "TASK_C"
-    #                 ]
-    #             }
-    #         }
-    #     ]
-    # }
