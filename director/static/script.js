@@ -285,7 +285,7 @@ new Vue({
         this.$store.dispatch('listWorkflows');
       },
       REFRESH_INTERVAL);
-    
+
     let workflowID = this.$route.params.id;
     if (workflowID) {
       this.$store.dispatch('getWorkflow', workflowID);

@@ -73,7 +73,7 @@ class Config(object):
         self.DEFAULT_RETENTION_OFFSET = env.int("DIRECTOR_DEFAULT_RETENTION_OFFSET", -1)
 
         # static workflow file format
-        self.WORKFLOW_FORMAT = env.str("DIRECTOR_WORKFLOW_FORMAT", "json").lower()
+        self.WORKFLOW_FORMAT = env.str("DIRECTOR_WORKFLOW_FORMAT", "yaml").lower()
 
 
 class UserConfig(dict):

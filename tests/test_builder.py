@@ -134,16 +134,15 @@ def test_build_grouped_tasks(app, create_builder, workflow_fmt):
     }
 
 
-@pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
-def test_build_nested_chain_tasks(app, create_builder, workflow_fmt):
-    app.config["WORKFLOW_FORMAT"] = workflow_fmt
+def test_build_complex_workflow(app, create_builder):
+    app.config["WORKFLOW_FORMAT"] = "json"
     keys = ["id", "created", "updated", "task"]
-    data, builder = create_builder("example", "NESTED_CHAIN", {"foo": "bar"})
+    data, builder = create_builder("example", "COMPLEX_WORKFLOW", {"foo": "bar"})
     assert data == {
-        "name": "NESTED_CHAIN",
+        "name": "COMPLEX_WORKFLOW",
         "payload": {"foo": "bar"},
         "project": "example",
-        "fullname": "example.NESTED_CHAIN",
+        "fullname": "example.COMPLEX_WORKFLOW",
         "status": "pending",
         "periodic": False,
     }
@@ -153,12 +152,21 @@ def test_build_nested_chain_tasks(app, create_builder, workflow_fmt):
     assert builder.canvas[0].task == "director.tasks.workflows.start"
     assert builder.canvas[-1].task == "director.tasks.workflows.end"
     assert builder.canvas[1].task == "TASK_EXAMPLE"
-    assert builder.canvas[2].task == "celery.chain"
+    assert builder.canvas[2].task == "celery.group"
     assert builder.canvas[3].task == "TASK_EXAMPLE"
 
-    nested_chain_tasks = builder.canvas[2].tasks
-    nested_chain_task_names = [t.task for t in nested_chain_tasks]
-    assert nested_chain_task_names == ["TASK_A", "TASK_B", "TASK_C"]
+    group_tasks = builder.canvas[2].tasks
+    group_tasks_names = [t.task for t in group_tasks]
+    assert group_tasks_names == ["TASK_A", "TASK_B", "TASK_C"]
+
+    # Check the Celery Canvas Options
+    assert builder.canvas[0].options['queue'] == "celery"
+    assert group_tasks[0].options['queue'] == "complex"
+    assert group_tasks[0].options['retries'] == 3
+    assert group_tasks[-1].options.get('retries') is None
+    assert group_tasks[-1].options['queue'] == "celery"
+    assert builder.canvas[3].options['queue'] == "complex"
+    assert builder.canvas[3].options['retries'] == 5
 
     # Check the tasks in database (including previouses ID)
     with app.app_context():
@@ -179,13 +187,13 @@ def test_build_nested_chain_tasks(app, create_builder, workflow_fmt):
     }
     assert _remove_keys(tasks[2].to_dict(), keys) == {
         "key": "TASK_B",
-        "previous": [str(tasks[1].to_dict()["id"])],
+        "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
     }
     assert _remove_keys(tasks[3].to_dict(), keys) == {
         "key": "TASK_C",
-        "previous": [str(tasks[2].to_dict()["id"])],
+        "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
     }

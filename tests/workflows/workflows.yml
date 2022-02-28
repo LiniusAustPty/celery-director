@@ -64,16 +64,3 @@ example.RETURN_EXCEPTION:
   tasks:
     - STR
     - TASK_ERROR
-
-example.NESTED_CHAIN:
-  queue": celery
-  tasks:
-    - TASK_EXAMPLE
-    - EXAMPLE_NESTED_CHAIN:
-        type: chain
-        queue: nested
-        tasks:
-          - TASK_A
-          - TASK_B
-          - TASK_C
-    - TASK_EXAMPLE

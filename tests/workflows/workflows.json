@@ -84,22 +84,43 @@
             "TASK_ERROR"
         ]
     },
-    "example.NESTED_CHAIN": {
-        "queue": "celery",
+    "example.COMPLEX_WORKFLOW": {
+        "complex": true,
         "tasks": [
-            "TASK_EXAMPLE",
             {
-                "EXAMPLE_NESTED_CHAIN": {
-                    "type": "chain",
-                    "queue": "nested",
-                    "tasks": [
-                        "TASK_A",
-                        "TASK_B",
-                        "TASK_C"
-                    ]
-                }
+                "name": "TASK_EXAMPLE",
+                "type": "task"
             },
-            "TASK_EXAMPLE"
+            {
+                "name": "GROUP_EXAMPLE",
+                "type": "group",
+                "tasks": [
+                    {
+                        "name":"TASK_A",
+                        "type": "task",
+                        "queue": "complex",
+                        "options": {
+                            "retries": 3
+                        }
+                    },
+                    {
+                        "name":"TASK_B",
+                        "type": "task"
+                    },
+                    {
+                        "name":"TASK_C",
+                        "type": "task"
+                    }
+                ]
+            },
+            {
+                "name": "TASK_EXAMPLE",
+                "type": "task",
+                "queue": "complex",
+                "options": {
+                    "retries": 5
+                }
+            }
         ]
     }
 }
