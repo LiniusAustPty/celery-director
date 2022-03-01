@@ -120,6 +120,7 @@ def test_execute_chain_success(app, create_builder):
 
 
 def test_execute_complex_success(app, create_builder):
+    app.config["WORKFLOW_FORMAT"] = "json"
     workflow, builder = create_builder("example", "COMPLEX_WORKFLOW", {})
     assert workflow["status"] == "pending"
 

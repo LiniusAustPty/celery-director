@@ -68,12 +68,14 @@ def test_build_chained_tasks(app, create_builder, workflow_fmt):
         "previous": [],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
     assert _remove_keys(tasks[1].to_dict(), keys) == {
         "key": "TASK_B",
         "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
 
     assert _remove_keys(tasks[2].to_dict(), keys) == {
@@ -81,6 +83,7 @@ def test_build_chained_tasks(app, create_builder, workflow_fmt):
         "previous": [str(tasks[1].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
 
 @pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
@@ -119,18 +122,21 @@ def test_build_grouped_tasks(app, create_builder, workflow_fmt):
         "previous": [],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
     assert _remove_keys(tasks[1].to_dict(), keys) == {
         "key": "TASK_B",
         "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
     assert _remove_keys(tasks[2].to_dict(), keys) == {
         "key": "TASK_C",
         "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
 
 
@@ -178,28 +184,33 @@ def test_build_complex_workflow(app, create_builder):
         "previous": [],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
     assert _remove_keys(tasks[1].to_dict(), keys) == {
         "key": "TASK_A",
         "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "complex",
     }
     assert _remove_keys(tasks[2].to_dict(), keys) == {
         "key": "TASK_B",
         "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
     assert _remove_keys(tasks[3].to_dict(), keys) == {
         "key": "TASK_C",
         "previous": [str(tasks[0].to_dict()["id"])],
         "result": None,
         "status": "pending",
+        "queue": "celery",
     }
     assert _remove_keys(tasks[4].to_dict(), keys) == {
         "key": "TASK_EXAMPLE",
         "previous": [str(t.id) for t in tasks[1:4]],
         "result": None,
         "status": "pending",
+        "queue": "complex",
     }
