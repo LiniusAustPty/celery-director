@@ -84,7 +84,6 @@
             "TASK_ERROR"
         ]
     },
-    ,
     "example.COMPLEX_WORKFLOW": {
         "complex": true,
         "tasks": [
@@ -124,5 +123,4 @@
             }
         ]
     }
-}
 }
