@@ -231,6 +231,7 @@ def test_get_workflow(client, no_worker):
                 "previous": [],
                 "result": None,
                 "status": "pending",
+                "queue": "celery"
             }
         ],
     }
