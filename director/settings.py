@@ -76,6 +76,7 @@ class Config(object):
         # static workflow file format
         self.WORKFLOW_FORMAT = env.str("DIRECTOR_WORKFLOW_FORMAT", "yaml").lower()
 
+
 class UserConfig(dict):
     """Handle the user configuration"""
 

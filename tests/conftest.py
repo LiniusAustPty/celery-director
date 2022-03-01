@@ -95,9 +95,11 @@ def no_worker(monkeypatch):
 def create_builder(app):
     def _create_builder(project, name, payload, periodic=False, keys=KEYS_TO_REMOVE):
         with app.app_context():
-            obj = Workflow(
-                project=project, name=name, payload=payload, periodic=periodic
-            )
+            # TODO: Implement better patching
+            from director.extensions import cel_workflows
+            cel_workflows.init_app(app)
+
+            obj = Workflow(project=project, name=name, payload=payload, periodic=periodic)
             obj.save()
             data = obj.to_dict()
             wf = WorkflowBuilder(obj.id)
