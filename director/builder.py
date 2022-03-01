@@ -1,5 +1,7 @@
-from celery import chain, group
-from celery.utils import uuid
+from uuid import uuid4
+from copy import deepcopy
+
+import celery
 
 from director.exceptions import WorkflowSyntaxError
 from director.extensions import cel, cel_workflows
@@ -11,82 +13,85 @@ from director.tasks.workflows import start, end
 
 class WorkflowBuilder(object):
     def __init__(self, workflow_id):
+        self.workflow = Workflow.query.filter_by(id=workflow_id).first()
+        self.blueprint = cel_workflows.get_by_name(self.workflow)
+        self.complex = self.blueprint.get("complex", None)
+        self.default_queue = self.blueprint.get("queue", "celery")
         self.workflow_id = workflow_id
-        self._workflow = None
-
-        self.queue = cel_workflows.get_queue(str(self.workflow))
-        self.tasks = cel_workflows.get_tasks(str(self.workflow))
         self.canvas = []
-
-        # Pointer to the previous task(s)
         self.previous = []
 
-    @property
-    def workflow(self):
-        if not self._workflow:
-            self._workflow = Workflow.query.filter_by(id=self.workflow_id).first()
-        return self._workflow
+    def new_task(self, name, single=True, options=None, kwargs=None, **params):
+        task_id = str(uuid4())
+        options, kwargs = options or {}, kwargs or {}
+        options = {**self.blueprint.get("options", {}), **options}
+        options["queue"] = params.get("queue", self.default_queue)
+        kwargs.update(workflow_id=self.workflow_id, payload=self.workflow.payload)
 
-    def new_task(self, task_name, single=True):
-        task_id = uuid()
+        # Create a Celery task specifying its UUID
+        task = cel.tasks.get(name)
+        signature = task.subtask(task_id=task_id, kwargs=kwargs, **options)
 
-        # We create the Celery task specifying its UID
-        signature = cel.tasks.get(task_name).subtask(
-            kwargs={"workflow_id": self.workflow_id, "payload": self.workflow.payload},
-            queue=self.queue,
-            task_id=task_id,
-        )
-
-        # Director task has the same UID
+        # Create a Director task with the same UUID
         task = Task(
             id=task_id,
-            key=task_name,
+            key=name,
+            queue=options["queue"],
             previous=self.previous,
-            workflow_id=self.workflow.id,
+            workflow_id=self.workflow_id,
             status=StatusType.pending,
-        )
-        task.save()
+        ).save()
 
         if single:
             self.previous = [signature.id]
 
         return signature
 
-    def parse(self, tasks):
+    def new_group(self, item):
+        params = {k: v for k, v in item.items() if k not in ['type', 'name', 'tasks']}
+        group_tasks = [self.new_task(**t, single=False) for t in item['tasks']]
+        self.previous = [s.id for s in group_tasks]
+        return celery.group(*group_tasks, task_id=str(uuid4()), **params)
+
+    def parse_simple_item(self, item):
+        to_obj = lambda x: {"name": x, "type": "task"}
+        if type(item) is str:
+            return to_obj(item)
+        if type(item) is dict:
+            name = next(iter(item))
+            item = {"name": name, **item[name]}
+            if item.get("tasks"):
+                item["tasks"] = [to_obj(x) for x in item["tasks"]]
+            return item
+
+    def parse(self):
         canvas = []
-
-        for task in tasks:
-            if type(task) is str:
-                signature = self.new_task(task)
+        for item in self.blueprint["tasks"]:
+            item = deepcopy(item)
+            if not self.complex:
+                item = self.parse_simple_item(item)
+            if item["type"] == "task":
+                signature = self.new_task(**item)
                 canvas.append(signature)
-            elif type(task) is dict:
-                name = list(task)[0]
-                if "type" not in task[name] and task[name]["type"] != "group":
-                    raise WorkflowSyntaxError()
-
-                sub_canvas_tasks = [
-                    self.new_task(t, single=False) for t in task[name]["tasks"]
-                ]
-
-                sub_canvas = group(*sub_canvas_tasks, task_id=uuid())
+                continue
+            if item["type"] == "group":
+                sub_canvas = self.new_group(item)
                 canvas.append(sub_canvas)
-                self.previous = [s.id for s in sub_canvas_tasks]
-            else:
-                raise WorkflowSyntaxError()
-
+                continue
+            raise WorkflowSyntaxError
         return canvas
 
     def build(self):
-        self.canvas = self.parse(self.tasks)
-        self.canvas.insert(0, start.si(self.workflow.id).set(queue=self.queue))
-        self.canvas.append(end.si(self.workflow.id).set(queue=self.queue))
+        start_task = start.si(self.workflow_id).set(queue=self.default_queue)
+        end_task = end.si(self.workflow_id).set(queue=self.default_queue)
+        self.canvas = self.parse()
+        self.canvas.insert(0, start_task)
+        self.canvas.append(end_task)
 
     def run(self):
         if not self.canvas:
             self.build()
-
-        canvas = chain(*self.canvas, task_id=uuid())
-
+        canvas = celery.chain(*self.canvas, task_id=str(uuid4()))
         try:
             return canvas.apply_async()
         except Exception as e:
