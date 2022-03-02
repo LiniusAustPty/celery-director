@@ -40,16 +40,18 @@ jobs:
       - checkout
       - aws-cli/setup:
           profile-name: prod
-      - run:
-          name: Install
-          command: |
-            CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
-            pip config set global.index-url $CODEARTIFACT_TOKEN 
-            pip install -r requirements.txt
-            pip install pytest==5.3.5
+      # - run:
+      #     name: Install
+      #     command: |
+      #       CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+      #       pip config set global.index-url $CODEARTIFACT_TOKEN
+      #       pip install -r requirements.txt
+      #       pip install pytest==5.3.5
       - run:
           name: Run pytest
           command: |
+            CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+            pip config set global.index-url $CODEARTIFACT_TOKEN
             python setup.py develop
             export DIRECTOR_HOME=`pwd`/tests/workflows/
             export DIRECTOR_DATABASE_URI=postgresql://postgres@localhost:5432/postgres
