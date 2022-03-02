@@ -34,8 +34,8 @@ jobs:
   test:
     docker:
       - image: cimg/python:3.8.0
-      - image: cimg/redis:6.2.6
-      - image: cimg/postgres:14.1.0
+      - image: cimg/redis
+      - image: cimg/postgres
     steps:
       - checkout
       - aws-cli/setup:
