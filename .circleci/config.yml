@@ -34,7 +34,7 @@ jobs:
   test:
     docker:
       - image: cimg/go:1.17
-      - image: cimg/postgres:14.1.0
+      - image: cimg/postgres:14.1
     steps:
       - checkout
       - aws-cli/setup:
