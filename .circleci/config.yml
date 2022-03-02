@@ -1,0 +1,74 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0
+jobs:
+  build:
+    docker:
+      - image: cimg/python:3.8.0
+    steps:
+      - checkout
+      - aws-cli/setup:
+          profile-name: prod
+      - run:
+          name: Install twine
+          command: pip install twine
+      # - run:
+      #     name: Build and publish
+      #     command: |
+      #       CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+      #       pip config set global.index-url $CODEARTIFACT_TOKEN
+      #       ./publish.sh
+  lint:
+    docker:
+      - image: cimg/python:3.8.0
+    steps:
+      - checkout
+      - run:
+          name: Install flake8
+          command: pip install flake8
+      - run:
+          name: Run flake8
+          command: flake8 --config=.flake8.cfg
+
+  test:
+    docker:
+      - image: cimg/python:3.8.0
+    steps:
+      - checkout
+      - aws-cli/setup:
+          profile-name: prod
+      - run:
+          name: Install
+          command: |
+            CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+            pip config set global.index-url $CODEARTIFACT_TOKEN 
+            pip install -r requirements.txt
+            pip install pytest
+      - run:
+          name: Run pytest
+          command: pipenv run pytest -v
+
+workflows:
+  build_and_publish:
+    jobs:
+      - build:
+          context: aws-apps
+          filters:
+            branches:
+              # only:
+              ignore:
+                - main
+  lint_and_test:
+    jobs:
+      - lint:
+          filters:
+            branches:
+              ignore:
+                - main
+      - test:
+          context: aws-apps
+          filters:
+            branches:
+              ignore:
+                - main
