@@ -16,4 +16,4 @@ rm -rf dist/
 python -m pip install --upgrade build
 python -m build
 
-twine upload -r codeartifact dist/*
+twine upload -r codeartifact dist/* --verbose
