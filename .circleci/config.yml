@@ -60,8 +60,7 @@ workflows:
           context: aws-apps
           filters:
             branches:
-              # only:
-              ignore:
+              only:
                 - main
   lint_and_test:
     jobs:
