@@ -44,10 +44,14 @@ jobs:
             CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
             pip config set global.index-url $CODEARTIFACT_TOKEN 
             pip install -r requirements.txt
-            pip install pytest
+            pip install pytest==5.3.5
       - run:
           name: Run pytest
-          command: pipenv run pytest -v
+          command: |
+            python setup.py develop
+            export DIRECTOR_HOME=`pwd`/tests/workflows/
+            director celery worker -P solo -D &
+            pytest tests/ -v
 
 workflows:
   build_and_publish:
