@@ -52,7 +52,7 @@ jobs:
           command: |
             python setup.py develop
             export DIRECTOR_HOME=`pwd`/tests/workflows/
-            export DIRECTOR_DATABASE_URI=postgresql://postgres@localhost:5432/db
+            export DIRECTOR_DATABASE_URI=postgresql://postgres@localhost:5432/postgres
             export DIRECTOR_BROKER_URI=redis://localhost:6379/0
             director celery worker -P solo -D &
             pytest tests/ -v
