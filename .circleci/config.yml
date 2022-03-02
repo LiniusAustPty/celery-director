@@ -18,17 +18,6 @@ jobs:
             CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
             pip config set global.index-url $CODEARTIFACT_TOKEN
             ./publish.sh
-  lint:
-    docker:
-      - image: cimg/python:3.8.0
-    steps:
-      - checkout
-      - run:
-          name: Install flake8
-          command: pip install flake8
-      - run:
-          name: Run flake8
-          command: flake8 --config=.flake8.cfg
 
   test:
     docker:
@@ -64,11 +53,6 @@ workflows:
                 - main
   lint_and_test:
     jobs:
-      - lint:
-          filters:
-            branches:
-              ignore:
-                - main
       - test:
           context: aws-apps
           filters:
