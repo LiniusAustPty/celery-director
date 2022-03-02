@@ -34,6 +34,8 @@ jobs:
   test:
     docker:
       - image: cimg/python:3.8.0
+      - image: cimg/redis:6.2.6
+      - image: cimg/postgres:14.1.0
     steps:
       - checkout
       - aws-cli/setup:
@@ -50,9 +52,8 @@ jobs:
           command: |
             python setup.py develop
             export DIRECTOR_HOME=`pwd`/tests/workflows/
-            export DIRECTOR_DATABASE_URI=postgresql://postgres_user:postgres_pass@localhost:5432/director_db
+            export DIRECTOR_DATABASE_URI=postgresql://postgres_user@localhost:5432/db
             export DIRECTOR_BROKER_URI=redis://localhost:6379/0
-            docker-compose up -d redis postgres
             director celery worker -P solo -D &
             pytest tests/ -v
 
