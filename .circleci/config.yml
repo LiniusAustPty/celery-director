@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@2.0
 jobs:
-  build:
+  build_and_publish:
     docker:
       - image: cimg/python:3.8.0
     steps:
@@ -56,7 +56,7 @@ jobs:
 workflows:
   build_and_publish:
     jobs:
-      - build:
+      - build_and_publish:
           context: aws-apps
           filters:
             branches:
