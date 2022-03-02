@@ -55,7 +55,8 @@ jobs:
             export DIRECTOR_DATABASE_URI=postgresql://postgres@localhost:5432/postgres
             export DIRECTOR_BROKER_URI=redis://localhost:6379/0
             director celery worker -P solo -D &
-            pytest tests/ -v
+            exit 1
+            # pytest tests/ -v
 
 workflows:
   build_and_publish:
