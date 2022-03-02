@@ -107,3 +107,11 @@ Read the [documentation](https://ovh.github.io/celery-director/) to try the quic
 ## License
 
 See https://github.com/ovh/celery-director/blob/master/LICENSE
+
+
+## CodeArtifact - Release a new version
+On a merge to main, a CircleCI workflow will be triggered that will publish this package to the `prod` CodeArtifact repository. To bump the version number, modify `director/VERSION` file.
+
+pytest is run on push to non main branches
+
+CircleCI workflow [here](https://app.circleci.com/pipelines/github/LiniusAustPty/celery-director)
