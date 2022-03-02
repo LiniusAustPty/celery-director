@@ -8,17 +8,16 @@ jobs:
       - image: cimg/python:3.8.0
     steps:
       - checkout
-      - aws-cli/setup:
-          profile-name: prod
+      - aws-cli/setup
       - run:
           name: Install twine
           command: pip install twine
-      # - run:
-      #     name: Build and publish
-      #     command: |
-      #       CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
-      #       pip config set global.index-url $CODEARTIFACT_TOKEN
-      #       ./publish.sh
+      - run:
+          name: Build and publish
+          command: |
+            CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+            pip config set global.index-url $CODEARTIFACT_TOKEN
+            ./publish.sh
   lint:
     docker:
       - image: cimg/python:3.8.0
@@ -40,13 +39,6 @@ jobs:
       - checkout
       - aws-cli/setup:
           profile-name: prod
-      # - run:
-      #     name: Install
-      #     command: |
-      #       CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
-      #       pip config set global.index-url $CODEARTIFACT_TOKEN
-      #       pip install -r requirements.txt
-      #       pip install pytest==5.3.5
       - run:
           name: Run pytest
           command: |
