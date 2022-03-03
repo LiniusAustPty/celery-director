@@ -1,3 +1,4 @@
+from functools import cached_property
 from uuid import uuid4
 from copy import deepcopy
 
@@ -13,13 +14,16 @@ from director.tasks.workflows import start, end
 
 class WorkflowBuilder(object):
     def __init__(self, workflow_id):
-        self.workflow = Workflow.query.filter_by(id=workflow_id).first()
         self.blueprint = cel_workflows.get_by_name(self.workflow)
         self.complex = self.blueprint.get("complex", None)
         self.default_queue = self.blueprint.get("queue", "celery")
         self.workflow_id = workflow_id
         self.canvas = []
         self.previous = []
+
+    @cached_property
+    def workflow(self):
+        return Workflow.query.filter_by(id=self.workflow_id).first()
 
     def new_task(self, name, single=True, options=None, kwargs=None, **params):
         task_id = str(uuid4())
