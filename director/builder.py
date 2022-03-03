@@ -14,10 +14,10 @@ from director.tasks.workflows import start, end
 
 class WorkflowBuilder(object):
     def __init__(self, workflow_id):
-        self._blueprint = cel_workflows.get_by_name(self.workflow)
-        self.complex = self.blueprint.get("complex", None)
-        self.default_queue = self.blueprint.get("queue", "celery")
         self.workflow_id = workflow_id
+        self._blueprint = cel_workflows.get_by_name(self.workflow)
+        self.default_queue = self.blueprint.get("queue", "celery")
+        self.complex = self.blueprint.get("complex")
         self.canvas = []
         self.previous = []
 
