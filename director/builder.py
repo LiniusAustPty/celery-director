@@ -1,6 +1,6 @@
 from functools import cached_property
+from types import MappingProxyType
 from uuid import uuid4
-from copy import deepcopy
 
 import celery
 
@@ -14,12 +14,16 @@ from director.tasks.workflows import start, end
 
 class WorkflowBuilder(object):
     def __init__(self, workflow_id):
-        self.blueprint = cel_workflows.get_by_name(self.workflow)
+        self._blueprint = cel_workflows.get_by_name(self.workflow)
         self.complex = self.blueprint.get("complex", None)
         self.default_queue = self.blueprint.get("queue", "celery")
         self.workflow_id = workflow_id
         self.canvas = []
         self.previous = []
+
+    @cached_property
+    def blueprint(self):
+        return MappingProxyType(self._blueprint)
 
     @cached_property
     def workflow(self):
@@ -52,10 +56,9 @@ class WorkflowBuilder(object):
         return signature
 
     def new_group(self, item):
-        params = {k: v for k, v in item.items() if k not in ['type', 'name', 'tasks']}
         group_tasks = [self.new_task(**t, single=False) for t in item['tasks']]
         self.previous = [s.id for s in group_tasks]
-        return celery.group(*group_tasks, task_id=str(uuid4()), **params)
+        return celery.group(*group_tasks, task_id=str(uuid4()))
 
     def parse_simple_item(self, item):
         to_obj = lambda x: {"name": x, "type": "task"}
@@ -71,7 +74,6 @@ class WorkflowBuilder(object):
     def parse(self):
         canvas = []
         for item in self.blueprint["tasks"]:
-            item = deepcopy(item)
             if not self.complex:
                 item = self.parse_simple_item(item)
             if item["type"] == "task":
