@@ -8,10 +8,6 @@ pay attention to a few things:
 3. your work must respect the Developer Certificate of Origin explained below
 4. GitHub Pull Requests
 
-## Coding and documentation Style:
-
-- Code must be formated with `black`
-
 ## Submitting Modifications:
 
 The contributions should be submitted through Github Pull Requests
