@@ -3,7 +3,7 @@
 </p>
 <p align="center">
   <a href="https://github.com/ovh/celery-director/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/ovh/celery-director/workflows/Tests/badge.svg"></a>
-  <a href="https://www.python.org/"><img alt="Python versions" src="https://img.shields.io/badge/python-3.6%2B-blue.svg"></a>
+  <a href="https://www.python.org/"><img alt="Python versions" src="https://img.shields.io/badge/python-3.8%2B-blue.svg"></a>
   <a href="https://github.com/ovh/depc/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-BSD%203--Clause-blue.svg"></a>
 </p>
 <p align="center">
@@ -26,7 +26,7 @@ See how to use Director with the quickstart and guides in the [documentation](ht
 
 ## Installation
 
-Install the latest version of Director with pip (requires `Python 3.6` at least):
+Install the latest version of Director with pip (requires `Python 3.8` at least):
 
 ```bash
 pip install celery-director
