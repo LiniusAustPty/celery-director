@@ -140,8 +140,9 @@ def test_build_grouped_tasks(app, create_builder, workflow_fmt):
     }
 
 
-def test_build_complex_workflow(app, create_builder):
-    app.config["WORKFLOW_FORMAT"] = "json"
+@pytest.mark.parametrize("workflow_fmt", [('yaml'), ('json')])
+def test_build_complex_workflow(app, create_builder, workflow_fmt):
+    app.config["WORKFLOW_FORMAT"] = workflow_fmt
     keys = ["id", "created", "updated", "task"]
     data, builder = create_builder("example", "COMPLEX_WORKFLOW", {"foo": "bar"})
     assert data == {
