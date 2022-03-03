@@ -20,9 +20,9 @@ def load_requirements():
 
 
 setup(
-    name="celery-director",
+    name="celery-director-linius",
     version=load_version(),
-    description="Celery Director",
+    description="Celery Director Linius",
     long_description=load_long_description(),
     long_description_content_type="text/markdown",
     license="BSD",
