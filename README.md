@@ -3,9 +3,8 @@
 </p>
 <p align="center">
   <a href="https://github.com/ovh/celery-director/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/ovh/celery-director/workflows/Tests/badge.svg"></a>
-  <a href="https://www.python.org/"><img alt="Python versions" src="https://img.shields.io/badge/python-3.6%2B-blue.svg"></a>
+  <a href="https://www.python.org/"><img alt="Python versions" src="https://img.shields.io/badge/python-3.8%2B-blue.svg"></a>
   <a href="https://github.com/ovh/depc/blob/master/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-BSD%203--Clause-blue.svg"></a>
-  <a href="https://github.com/python/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 <p align="center">
   <a href="https://raw.githubusercontent.com/ovh/celery-director/master/director.gif"><img alt="Celery Director" src="https://raw.githubusercontent.com/ovh/celery-director/master/director.gif"></a>
@@ -27,7 +26,7 @@ See how to use Director with the quickstart and guides in the [documentation](ht
 
 ## Installation
 
-Install the latest version of Director with pip (requires `Python 3.6` at least):
+Install the latest version of Director with pip (requires `Python 3.8` at least):
 
 ```bash
 pip install celery-director
@@ -60,7 +59,10 @@ def send_mail(*args, **kwargs):
     mail.send()
 ```
 
-### Build your workflows in YAML
+### Build your workflows in YAML or JSON
+```bash
+export DIRECTOR_WORKFLOW_FORMAT=json
+```
 
 ```yaml
 # workflows.yml
@@ -68,6 +70,18 @@ product.ORDER:
   tasks:
     - ORDER_PRODUCT
     - SEND_MAIL
+```
+
+```json
+# workflows.json
+{
+    "product.ORDER": {
+        "tasks": [
+            "ORDER_PRODUCT",
+            "SEND_MAIL"
+        ]
+    }
+}
 ```
 
 ### Run it
@@ -92,7 +106,8 @@ Read the [documentation](https://ovh.github.io/celery-director/) to try the quic
 ## Project layout
 
     .env                # The configuration file.
-    workflows.yml       # The workflows definition.
+    workflows.yml       # The yaml workflows definition.
+    workflows.json      # The json workflows definition.
     tasks/
         example.py      # A file containing some tasks.
         ...             # Other files containing other tasks.

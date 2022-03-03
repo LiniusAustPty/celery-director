@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from setuptools import find_packages, setup
 
 
@@ -25,14 +24,14 @@ setup(
     description="Celery Director Linius",
     long_description=load_long_description(),
     long_description_content_type="text/markdown",
-    license="BSD",
-    author="Linius",
-    author_email="engineering@linius.com",
     url="https://github.com/LiniusAustPty/celery-director",
+    author_email="engineering@linius.com",
+    author="Linius",
+    license="BSD",
     packages=find_packages(),
     include_package_data=True,
     install_requires=load_requirements(),
-    python_requires="~=3.6",
+    python_requires="~=3.8",
     extras_require={
         "dev": [
             "tox==3.5.3",
@@ -51,8 +50,7 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: System :: Monitoring",
     ],
     entry_points={

@@ -95,9 +95,14 @@ def no_worker(monkeypatch):
 def create_builder(app):
     def _create_builder(project, name, payload, periodic=False, keys=KEYS_TO_REMOVE):
         with app.app_context():
-            obj = Workflow(
-                project=project, name=name, payload=payload, periodic=periodic
-            )
+            # TODO: investigate the root cause of this issue and implement fix
+            # The current implementation of initializing a flask_app fixture is
+            # performed before the test logic runs, we are therefore unable
+            # to update any of the app config without calling extension.app_init
+            from director.extensions import cel_workflows
+            cel_workflows.init_app(app)
+
+            obj = Workflow(project=project, name=name, payload=payload, periodic=periodic)
             obj.save()
             data = obj.to_dict()
             wf = WorkflowBuilder(obj.id)

@@ -26,7 +26,7 @@ The objective is to make Celery easier to use by providing :
 
 ## Installation
 
-Install the latest version of Director with pip (requires `Python 3.6` at least):
+Install the latest version of Director with pip (requires `Python 3.8` at least):
 
 ```bash
 pip install celery-director
