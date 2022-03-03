@@ -5,7 +5,7 @@ venv/
 
 # Build
 build/
-*.egg-info/
+*.egg-info
 dist/
 
 # Celery
