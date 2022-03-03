@@ -59,7 +59,10 @@ def send_mail(*args, **kwargs):
     mail.send()
 ```
 
-### Build your workflows in YAML
+### Build your workflows in YAML or JSON
+```bash
+export DIRECTOR_WORKFLOW_FORMAT=json
+```
 
 ```yaml
 # workflows.yml
@@ -67,6 +70,18 @@ product.ORDER:
   tasks:
     - ORDER_PRODUCT
     - SEND_MAIL
+```
+
+```json
+# workflows.json
+{
+    "product.ORDER": {
+        "tasks": [
+            "ORDER_PRODUCT",
+            "SEND_MAIL"
+        ]
+    }
+}
 ```
 
 ### Run it
@@ -91,7 +106,8 @@ Read the [documentation](https://ovh.github.io/celery-director/) to try the quic
 ## Project layout
 
     .env                # The configuration file.
-    workflows.yml       # The workflows definition.
+    workflows.yml       # The yaml workflows definition.
+    workflows.json      # The json workflows definition.
     tasks/
         example.py      # A file containing some tasks.
         ...             # Other files containing other tasks.
