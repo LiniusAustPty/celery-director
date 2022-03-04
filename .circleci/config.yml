@@ -1,0 +1,61 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0
+jobs:
+  build_and_publish:
+    docker:
+      - image: cimg/python:3.8.0
+    steps:
+      - checkout
+      - aws-cli/setup
+      - run:
+          name: Install twine
+          command: pip install twine
+      - run:
+          name: Build and publish
+          command: |
+            CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+            pip config set global.index-url $CODEARTIFACT_TOKEN
+            ./publish.sh
+
+  test:
+    docker:
+      - image: cimg/python:3.8.0
+      - image: cimg/redis:6.2.6
+      - image: cimg/postgres:14.1
+    steps:
+      - checkout
+      - aws-cli/setup:
+          profile-name: prod
+      - run:
+          name: Run pytest
+          command: |
+            CODEARTIFACT_TOKEN=$(./pypi_auth.sh)
+            pip config set global.index-url $CODEARTIFACT_TOKEN
+            python setup.py develop
+            export DIRECTOR_HOME=`pwd`/tests/workflows/
+            export DIRECTOR_DATABASE_URI=postgresql://postgres@localhost:5432/postgres
+            export DIRECTOR_BROKER_URI=redis://localhost:6379/0
+            export PATH=/home/circleci/.pyenv/versions/3.8.0/bin:$PATH
+            director celery worker -P solo -D &
+            pip install pytest==5.3.5
+            pytest tests/ -v
+
+workflows:
+  build_and_publish:
+    jobs:
+      - build_and_publish:
+          context: aws-apps
+          filters:
+            branches:
+              only:
+                - main
+  lint_and_test:
+    jobs:
+      - test:
+          context: aws-apps
+          filters:
+            branches:
+              ignore:
+                - main

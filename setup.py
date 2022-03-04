@@ -1,57 +1,60 @@
 from pathlib import Path
-
 from setuptools import find_packages, setup
 
-with open(
-    Path(__file__).parent.resolve() / "director" / "VERSION", encoding="utf-8"
-) as ver:
-    version = ver.readline().rstrip()
 
-with open("requirements.txt", encoding="utf-8") as req:
-    requirements = [r.rstrip() for r in req.readlines()]
+def load_version():
+    package_path = Path(__file__).parent.resolve() / "director"
+    with open(package_path / "VERSION", encoding="utf-8") as f:
+        return f.readline().rstrip()
 
-long_description = ""
-try:
-    with open("README.md", encoding="utf-8") as readme:
-        long_description = readme.read()
-except FileNotFoundError:
-    pass
 
-dev_requirements = [
-    "tox==3.5.3",
-]
+def load_long_description():
+    with open("README.md", encoding="utf-8") as f:
+        return f.read()
 
-doc_requirements = ["mkdocs==1.0.4", "mkdocs-material==4.6.3"]
+
+def load_requirements():
+    with open("requirements.txt", encoding="utf-8") as f:
+        return [r.rstrip() for r in f.readlines()]
 
 
 setup(
-    name="celery-director",
-    version=version,
-    description="Celery Director",
-    long_description=long_description,
+    name="celery-director-linius",
+    version=load_version(),
+    description="Celery Director Linius",
+    long_description=load_long_description(),
     long_description_content_type="text/markdown",
+    url="https://github.com/LiniusAustPty/celery-director",
+    author_email="engineering@linius.com",
+    author="Linius",
     license="BSD",
-    author="OVHcloud",
-    author_email="opensource@ovhcloud.com",
-    url="https://github.com/ovh/celery-director",
     packages=find_packages(),
-    install_requires=requirements,
-    extras_require={
-        "dev": dev_requirements,
-        "ci": ["pytest", "pytest-cov"],
-        "doc": doc_requirements,
-    },
     include_package_data=True,
-    entry_points={"console_scripts": ["director=director.cli:cli"],},
+    install_requires=load_requirements(),
+    python_requires="~=3.8",
+    extras_require={
+        "dev": [
+            "tox==3.5.3",
+        ],
+        "doc": [
+            "mkdocs==1.0.4",
+            "mkdocs-material==4.6.3",
+        ],
+        "ci": [
+            "pytest",
+            "pytest-cov",
+        ]
+    },
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Environment :: Console",
-        "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
         "Topic :: System :: Monitoring",
     ],
-    python_requires="~=3.8",
+    entry_points={
+        "console_scripts": [
+            "director=director.cli:cli"
+        ]
+    },
 )
