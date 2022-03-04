@@ -50,7 +50,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - master
   lint_and_test:
     jobs:
       - test:
@@ -58,4 +58,4 @@ workflows:
           filters:
             branches:
               ignore:
-                - main
+                - master
