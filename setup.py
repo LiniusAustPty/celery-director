@@ -35,7 +35,6 @@ setup(
     extras_require={
         "dev": [
             "tox==3.5.3",
-            "black==20.8b1",
         ],
         "doc": [
             "mkdocs==1.0.4",
