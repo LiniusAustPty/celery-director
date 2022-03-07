@@ -38,7 +38,7 @@ jobs:
             export DIRECTOR_DATABASE_URI=postgresql://postgres@localhost:5432/postgres
             export DIRECTOR_BROKER_URI=redis://localhost:6379/0
             export PATH=/home/circleci/.pyenv/versions/3.8.0/bin:$PATH
-            director celery worker -P solo -D &
+            director celery worker --pool=solo --queues=celery,complex -D &
             pip install pytest==5.3.5
             pytest tests/ -v
 

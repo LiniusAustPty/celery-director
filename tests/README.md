@@ -8,7 +8,7 @@ $ (venv) git clone https://github.com/ovh/director && cd director
 $ (venv) python setup.py develop
 $ (venv) export DIRECTOR_HOME=`pwd`/tests/workflows/
 $ (venv) docker-compose up -d redis postgres
-$ (venv) director celery worker -P solo -D
+$ (venv) director celery worker --pool=solo --queues=celery,complex
 ```
 
 Configuration (database, redis...) can be customized in the `$DIRECTOR_HOME/.env` file.
