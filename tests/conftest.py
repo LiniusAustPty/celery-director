@@ -45,7 +45,7 @@ class DirectorResponse(Response):
 
 @pytest.fixture(scope="function")
 def app_module():
-    # os.environ['DIRECTOR_CELERY_IMPORTS'] = 'tests.workflows.tasks'
+    os.environ['DIRECTOR_CELERY_IMPORTS'] = 'tests.workflows.tasks'
     app = create_app(str(Path(__file__).parent.resolve() / "workflows"))
 
     with app.app_context():
