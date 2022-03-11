@@ -115,8 +115,8 @@ class FlaskCelery(Celery):
 
     def init_app(self, app):
         self.app = app
-        self.conf.update(app.config.get("CELERY_CONF", {}))
-        self.autodiscover_tasks(app.config.get('CELERY_AUTO_DISCOVER', []), force=True)
+        self.conf.update(self.app.config.get("CELERY_CONF", {}))
+        self.autodiscover_tasks(self.app.config.get('CELERY_AUTO_DISCOVER', []))
 
 
 # Sentry Extension
