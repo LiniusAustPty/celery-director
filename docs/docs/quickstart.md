@@ -45,6 +45,18 @@ def extract(*args, **kwargs):
     print("Extracting data")
 ```
 
+Alternatively you can also use dynmamic task loading on the workers by setting the
+`DIRECTOR_CELERY_IMPORTS` or `DIRECTOR_CELERY_AUTO_DISCOVER` environment variables
+to a list of modules. See the below celery documentation links for further details
+
+```shell
+# https://docs.celeryproject.org/en/stable/userguide/configuration.html#std-setting-imports
+$ export DIRECTOR_CELERY_IMPORTS="worker.local.tasks,worker.remote.tasks"
+
+# https://docs.celeryproject.org/en/stable/reference/celery.html#celery.Celery.autodiscover_tasks
+$ export DIRECTOR_CELERY_AUTO_DISCOVER="worker.local,worker.remote"
+```
+
 While the `workflows.yml` file will be used to combine them into workflows :
 
 ```yaml

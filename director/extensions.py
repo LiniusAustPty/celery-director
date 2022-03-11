@@ -64,15 +64,17 @@ class CeleryWorkflow:
 
     def import_user_tasks(self):
         self.plugin_base = PluginBase(package="director.foobar")
-
         folder = Path(self.app.config["DIRECTOR_HOME"]).resolve()
+        tasks_folder = Path(folder / "tasks").resolve()
         self.plugin_source = self.plugin_base.make_plugin_source(
             searchpath=[str(folder)]
         )
 
-        tasks = Path(folder / "tasks").glob("**/*.py")
+        if not tasks_folder.exists():
+            return
+
         with self.plugin_source:
-            for task in tasks:
+            for task in tasks_folder.glob("**/*.py"):
                 if task.stem == "__init__":
                     continue
 
@@ -106,7 +108,6 @@ class CeleryWorkflow:
 # Celery Extension
 class FlaskCelery(Celery):
     def __init__(self, *args, **kwargs):
-        kwargs["include"] = ["director.tasks"]
         super(FlaskCelery, self).__init__(*args, **kwargs)
 
         if "app" in kwargs:
@@ -115,6 +116,7 @@ class FlaskCelery(Celery):
     def init_app(self, app):
         self.app = app
         self.conf.update(app.config.get("CELERY_CONF", {}))
+        self.autodiscover_tasks(app.config.get('CELERY_AUTO_DISCOVER', []), force=True)
 
 
 # Sentry Extension

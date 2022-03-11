@@ -36,9 +36,8 @@ class WorkflowBuilder(object):
         options["queue"] = params.get("queue", self.default_queue)
         kwargs.update(workflow_id=self.workflow_id, payload=self.workflow.payload)
 
-        # Create a Celery task specifying its UUID
-        task = cel.tasks.get(name)
-        signature = task.subtask(task_id=task_id, kwargs=kwargs, **options)
+        # Create a Celery subtask signature specifying its UUID
+        signature = celery.subtask(name, task_id=task_id, kwargs=kwargs, **options)
 
         # Create a Director task with the same UUID
         task = Task(

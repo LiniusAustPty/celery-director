@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,6 @@ from director import create_app
 from director.builder import WorkflowBuilder
 from director.extensions import cel, db
 from director.models.workflows import Workflow
-
 
 KEYS_TO_REMOVE = ["id", "created", "updated"]
 
@@ -43,8 +43,9 @@ class DirectorResponse(Response):
         return _remove_keys(self.get_json(), self._KEYS_TO_REMOVE)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def app_module():
+    # os.environ['DIRECTOR_CELERY_IMPORTS'] = 'tests.workflows.tasks'
     app = create_app(str(Path(__file__).parent.resolve() / "workflows"))
 
     with app.app_context():
@@ -95,13 +96,6 @@ def no_worker(monkeypatch):
 def create_builder(app):
     def _create_builder(project, name, payload, periodic=False, keys=KEYS_TO_REMOVE):
         with app.app_context():
-            # TODO: investigate the root cause of this issue and implement fix
-            # The current implementation of initializing a flask_app fixture is
-            # performed before the test logic runs, we are therefore unable
-            # to update any of the app config without calling extension.app_init
-            from director.extensions import cel_workflows
-            cel_workflows.init_app(app)
-
             obj = Workflow(project=project, name=name, payload=payload, periodic=periodic)
             obj.save()
             data = obj.to_dict()

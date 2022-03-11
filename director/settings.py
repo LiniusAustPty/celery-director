@@ -64,9 +64,17 @@ class Config(object):
             "result_backend": env.str(
                 "DIRECTOR_RESULT_BACKEND_URI", "redis://localhost:6379/1"
             ),
+            "imports": ["director.tasks"],
             "broker_transport_options": {"master_name": "director"},
         }
 
+        # Celery task import config
+        if any(env.list("DIRECTOR_CELERY_IMPORTS", [])):
+            self.CELERY_CONF['imports'] += env.list("DIRECTOR_CELERY_IMPORTS", [])
+        if any(env.list("DIRECTOR_CELERY_AUTO_DISCOVER", [])):
+            self.CELERY_AUTO_DISCOVER = env.list("DIRECTOR_CELERY_AUTO_DISCOVER", [])
+
+        self.CELERY_AUTO_DISCOVER = ["tests.workflows"]
         # Sentry configuration
         self.SENTRY_DSN = env.str("DIRECTOR_SENTRY_DSN", "")
 
