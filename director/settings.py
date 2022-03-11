@@ -74,7 +74,6 @@ class Config(object):
         if any(env.list("DIRECTOR_CELERY_AUTO_DISCOVER", [])):
             self.CELERY_AUTO_DISCOVER = env.list("DIRECTOR_CELERY_AUTO_DISCOVER", [])
 
-        self.CELERY_AUTO_DISCOVER = ["tests.workflows"]
         # Sentry configuration
         self.SENTRY_DSN = env.str("DIRECTOR_SENTRY_DSN", "")
 
