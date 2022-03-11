@@ -45,7 +45,7 @@ def extract(*args, **kwargs):
     print("Extracting data")
 ```
 
-Alternatively you can also use dynmamic task loading on the workers by setting the
+Alternatively you can also use dynamic task loading on the workers by setting the
 `DIRECTOR_CELERY_IMPORTS` or `DIRECTOR_CELERY_AUTO_DISCOVER` environment variables
 to a list of modules. See the below celery documentation links for further details
 
